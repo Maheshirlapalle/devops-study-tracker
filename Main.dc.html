@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DevOps Study Tracker</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid #141a22;outline-offset:2px}
+.topic:hover{background:#ecebe4}
+</style>
+</helmet>
+<div style="min-height: 2600px; background: #f5f4ef; color: #141a22; font-family: 'IBM Plex Sans', system-ui, sans-serif; box-sizing: border-box; padding: 56px 24px 96px">
+<div style="max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px">
+
+<header style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-end; justify-content: space-between; padding-bottom: 32px; border-bottom: 2px solid #141a22">
+<div style="display: flex; flex-direction: column; gap: 12px; flex: 1 1 420px; min-width: 0">
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #565c66">Study tracker / DevOps</div>
+<h1 style="margin: 0; font-size: clamp(36px, 6vw, 64px); line-height: 1.02; font-weight: 700; letter-spacing: -0.02em">DevOps, one topic at a time.</h1>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #565c66; max-width: 52ch">Tick each topic when you can explain it and use it. Progress is saved in this browser.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; flex: 1 1 280px; max-width: 360px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px">
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 56px; font-weight: 600; line-height: 1">{{overall.pct}}%</div>
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #565c66">{{overall.done}} / {{overall.total}} topics</div>
+</div>
+<div style="height: 10px; background: #dedcd2; border-radius: 2px; overflow: hidden"><div style="{{overall.barStyle}}"></div></div>
+</div>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between">
+<div style="display: flex; gap: 8px" role="group" aria-label="Filter topics">
+<button style="{{allStyle}}" aria-pressed="{{allPressed}}" onClick="{{showAll}}">All topics</button>
+<button style="{{openStyle}}" aria-pressed="{{openPressed}}" onClick="{{showOpen}}">Still to do</button>
+</div>
+<button style="min-height: 44px; padding: 0 18px; font-size: 14px; font-weight: 500; color: #565c66; background: transparent; border: 1px solid #b9b7ab; border-radius: 4px" onClick="{{resetAll}}">Reset progress</button>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(520px, 100%), 1fr)); gap: 20px; align-items: start">
+<sc-for list="{{modules}}" as="m" hint-placeholder-count="4">
+<section style="background: #fcfbf8; border: 1px solid #cfcdc2; border-radius: 4px; display: flex; flex-direction: column">
+<div style="padding: 20px 20px 16px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid #e2e0d6">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px">
+<div style="display: flex; align-items: baseline; gap: 12px; min-width: 0">
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #565c66">{{m.num}}</span>
+<h2 style="margin: 0; font-size: 22px; line-height: 1.2; font-weight: 600">{{m.title}}</h2>
+</div>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #565c66; white-space: nowrap">{{m.done}} / {{m.total}}</span>
+</div>
+<div style="height: 6px; background: #dedcd2; border-radius: 2px; overflow: hidden"><div style="{{m.barStyle}}"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; padding: 8px">
+<sc-for list="{{m.topics}}" as="t" hint-placeholder-count="5">
+<button class="topic" aria-pressed="{{t.pressed}}" onClick="{{t.toggle}}" style="display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 6px 12px; text-align: left; background: transparent; border: 0; border-radius: 3px; font-size: 16px; color: inherit">
+<span style="{{t.boxStyle}}">
+<sc-if value="{{t.checked}}" hint-placeholder-val="{{ false }}">
+<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 7.5l3 3 6-7"></path></svg>
+</sc-if>
+</span>
+<span style="{{t.labelStyle}}">{{t.label}}</span>
+</button>
+</sc-for>
+</div>
+</section>
+</sc-for>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0b6b45"},"$preview":{"width":1280,"height":2600}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { done: {}, filter: 'all' };
+  }
+  componentDidMount() {
+    try {
+      const raw = window.localStorage.getItem('devops-study-tracker');
+      if (raw) this.setState({ done: JSON.parse(raw) || {} });
+    } catch (e) {}
+  }
+  save(done) {
+    try { window.localStorage.setItem('devops-study-tracker', JSON.stringify(done)); } catch (e) {}
+  }
+  toggle(id) {
+    const done = Object.assign({}, this.state.done);
+    if (done[id]) delete done[id]; else done[id] = true;
+    this.save(done);
+    this.setState({ done: done });
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#0b6b45';
+    const done = this.state.done || {};
+    const filter = this.state.filter || 'all';
+    const data = [
+      ['Linux and shell', ['File system and permissions', 'Processes and systemd', 'Bash scripting', 'Networking basics: DNS, TCP, ports', 'SSH and key management']],
+      ['Git and workflows', ['Branching strategies', 'Merge, rebase and conflict resolution', 'Pull request reviews', 'Git hooks']],
+      ['CI/CD', ['Pipeline concepts and stages', 'GitHub Actions', 'Jenkins', 'Artifacts and caching', 'Blue/green and canary deployments']],
+      ['Containers', ['Dockerfile and image layers', 'Volumes and networking', 'Docker Compose', 'Registries and image scanning']],
+      ['Kubernetes', ['Pods, Deployments, Services', 'ConfigMaps and Secrets', 'Ingress and networking', 'Storage and StatefulSets', 'Helm charts', 'Troubleshooting workloads']],
+      ['Infrastructure as code', ['Terraform basics', 'State and remote backends', 'Modules and workspaces', 'Ansible playbooks']],
+      ['Cloud platform', ['IAM and least privilege', 'Compute and autoscaling', 'VPC and networking', 'Storage and managed databases', 'Cost management']],
+      ['Monitoring and logging', ['Metrics with Prometheus', 'Dashboards with Grafana', 'Centralised logging', 'Alerting, SLIs and SLOs']],
+      ['DevSecOps', ['Secrets management', 'SAST and dependency scanning', 'Supply chain security', 'Policy as code']],
+      ['Projects', ['Build a full CI/CD pipeline', 'Deploy an app to Kubernetes', 'Provision a VPC with Terraform', 'Add monitoring and alerts to a service']]
+    ];
+    const barOf = (pct, h) => 'height:' + h + 'px;width:' + pct + '%;background:' + accent + ';transition:width .25s ease';
+    let allDone = 0, allTotal = 0;
+    const modules = [];
+    data.forEach((entry, mi) => {
+      const topics = entry[1].map((label, ti) => {
+        const id = mi + '-' + ti;
+        const checked = !!done[id];
+        return {
+          id: id,
+          label: label,
+          checked: checked,
+          pressed: checked ? 'true' : 'false',
+          toggle: () => this.toggle(id),
+          boxStyle: 'flex:none;width:22px;height:22px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border-radius:3px;border:2px solid ' + (checked ? accent : '#7b8089') + ';background:' + (checked ? accent : 'transparent'),
+          labelStyle: checked ? 'color:#565c66;text-decoration:line-through;text-decoration-color:#7b8089' : 'color:#141a22'
+        };
+      });
+      const doneCount = topics.filter((t) => t.checked).length;
+      allDone += doneCount;
+      allTotal += topics.length;
+      const shown = filter === 'open' ? topics.filter((t) => !t.checked) : topics;
+      if (shown.length === 0) return;
+      modules.push({
+        num: String(mi + 1).padStart(2, '0'),
+        title: entry[0],
+        done: doneCount,
+        total: topics.length,
+        barStyle: barOf(Math.round(100 * doneCount / topics.length), 6),
+        topics: shown
+      });
+    });
+    const pct = allTotal ? Math.round(100 * allDone / allTotal) : 0;
+    const pill = (on) => 'min-height:44px;padding:0 18px;font-size:14px;font-weight:600;border-radius:4px;border:1px solid ' + (on ? '#141a22' : '#b9b7ab') + ';background:' + (on ? '#141a22' : 'transparent') + ';color:' + (on ? '#ffffff' : '#141a22');
+    return {
+      modules: modules,
+      overall: { pct: pct, done: allDone, total: allTotal, barStyle: barOf(pct, 10) },
+      allStyle: pill(filter === 'all'),
+      openStyle: pill(filter === 'open'),
+      allPressed: filter === 'all' ? 'true' : 'false',
+      openPressed: filter === 'open' ? 'true' : 'false',
+      showAll: () => this.setState({ filter: 'all' }),
+      showOpen: () => this.setState({ filter: 'open' }),
+      resetAll: () => { this.save({}); this.setState({ done: {} }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
